@@ -34,6 +34,11 @@ class Neural():
 
     def train(self):
         correct_num = 0
+        result = {
+            "weight": None,
+            "bias": None,
+            "acc": None
+        }
         for i in range(self.data_num):
             print("train: {}: {}".format(i, self.X[i]))
             
@@ -59,4 +64,25 @@ class Neural():
             print("weight after train: {}, bias after train: {}".format(self.weight, self.bias))
         print("############")
         print("acc: {}".format(correct_num/self.data_num))
+        print("############")
+        
+        result["weight"] = self.weight
+        result["bias"] = self.bias
+        result["acc"] = correct_num/self.data_num
+
+        return result
+
+    def predict(self, X, y):
+        data_num = len(y)
+        correct_num = 0
+        for i in range(data_num):
+            print("test: {}: {}".format(i, X[i]))
+            output = self.Y(X[i])
+            print("output: {}  expect: {}".format(output, y[i]))
+            print("net: {}".format(self.net))
+            if output == y[i]:
+                correct_num += 1
+
+        print("############")
+        print("test acc: {}".format(correct_num/data_num))
         print("############")

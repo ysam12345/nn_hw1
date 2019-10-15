@@ -9,9 +9,21 @@ from tkinter.filedialog import askopenfilename
 import pandas as pd
 from neural import Neural
 
-file_path = ""
+def drawPic(train_result_list):
+    #清空影象，以使得前後兩次繪製的影象不會重疊
+    drawPic.f.clf()
+    drawPic.a=drawPic.f.add_subplot(111)
+    
+    print(train_result_list)
 
-def drawPic():
+    acc_list = [i['acc'] for i in train_result_list]
+    print(acc_list)
+    #繪製這些隨機點的散點圖，顏色隨機選取
+    drawPic.a.plot(acc_list)
+    drawPic.a.set_title('Demo: acc_list')
+    drawPic.canvas.draw()
+
+def drawPic1():
     try:sampleCount=int(inputEntry.get())
     except:
         sampleCount=50
@@ -38,16 +50,38 @@ def select_file():
     print(filename)
     file_path = filename
     df = pd.read_table(filename, sep=" ", header=None)
-    print(df)
-    dfs = np.split(df, [len(df.columns)-1], axis=1)
-    X_df = dfs[0]
-    y_df = dfs[1]
-    X = X_df.values.tolist()
-    y = y_df.values.reshape(-1,).tolist()
+
+    # split traning data and testing data
+    train_df=df.sample(frac=0.666666)
+    test_df=df.drop(train_df.index)
+
+    train_dfs = np.split(train_df, [len(train_df.columns)-1], axis=1)
+    train_X_df = train_dfs[0]
+    train_y_df = train_dfs[1]
+    train_X = train_X_df.values.tolist()
+    train_y = train_y_df.values.reshape(-1,).tolist()
+
+    test_dfs = np.split(test_df, [len(test_df.columns)-1], axis=1)
+    test_X_df = test_dfs[0]
+    test_y_df = test_dfs[1]
+    test_X = test_X_df.values.tolist()
+    test_y = test_y_df.values.reshape(-1,).tolist()
+
     learning_rate = 0.8
-    n = Neural(X, y, learning_rate)
+    n = Neural(train_X, train_y, learning_rate)
+    train_result_list = []
+    print("### training start ###")
     for i in range(10):
-        n.train()
+        train_result = n.train()
+        train_result_list.append(train_result)
+    print("### training end ###")
+    drawPic(train_result_list)
+
+    print("### predict start ###")
+    n.predict(test_X, test_y)
+    print("### predict end ###")
+
+
 
 if __name__ == '__main__':    
 	
@@ -65,8 +99,8 @@ if __name__ == '__main__':
 	inputEntry=Entry(root)
 	inputEntry.grid(row=1,column=1)
 	inputEntry.insert(0,'50')
-	Button(root,text='畫圖',command=drawPic).grid(row=1,column=2,columnspan=3)
-	Button(root,text='open file',command=select_file).grid(row=1,column=2,columnspan=3)
+	Button(root,text='畫圖',command=drawPic).grid(row=1,column=1,columnspan=1)
+	Button(root,text='open file',command=select_file).grid(row=1,column=2,columnspan=1)
        
     #啟動事件迴圈
 	root.mainloop()
