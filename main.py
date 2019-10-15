@@ -7,6 +7,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from tkinter.filedialog import askopenfilename
 import pandas as pd
+from neural import Neural
 
 file_path = ""
 
@@ -36,8 +37,17 @@ def select_file():
     filename = askopenfilename()
     print(filename)
     file_path = filename
-    df = pd.read_table(filename, header=None)
+    df = pd.read_table(filename, sep=" ", header=None)
     print(df)
+    dfs = np.split(df, [len(df.columns)-1], axis=1)
+    X_df = dfs[0]
+    y_df = dfs[1]
+    X = X_df.values.tolist()
+    y = y_df.values.reshape(-1,).tolist()
+    learning_rate = 0.8
+    n = Neural(X, y, learning_rate)
+    for i in range(10):
+        n.train()
 
 if __name__ == '__main__':    
 	
