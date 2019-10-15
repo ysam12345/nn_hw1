@@ -90,7 +90,7 @@ class Application(tk.Frame):
 
         self.testing_acc_text_label = tk.Label(self)
         self.testing_acc_text_label["text"] = ""
-        self.testing_acc_text_label.grid(row=8, column=1, sticky=tk.N+tk.W)
+        self.testing_acc_text_label.grid(row=7, column=1, sticky=tk.N+tk.W)
 
         self.weight_label = tk.Label(self)
         self.weight_label["text"] = "當前鍵結值"
@@ -203,7 +203,7 @@ class Application(tk.Frame):
 
         #learning_rate = 0.8
         learning_rate = self.learning_rate.get()
-        
+
         # run training and show result
         n = Neural(train_X, train_y, learning_rate)
         train_result_list = []
