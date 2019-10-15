@@ -58,32 +58,46 @@ class Application(tk.Frame):
         self.training_data_canvas.get_tk_widget().grid(row=3, column=4, columnspan=3)
 
         # 相關結果文字
+        self.training_epoch_label = tk.Label(self)
+        self.training_epoch_label["text"] = "實際訓練次數(Epoch)"
+        self.training_epoch_label.grid(row=4, column=0, sticky=tk.N+tk.W)
+
+        self.training_epoch_text_label = tk.Label(self)
+        self.training_epoch_text_label["text"] = ""
+        self.training_epoch_text_label.grid(row=4, column=1, sticky=tk.N+tk.W)
+
         self.training_acc_label = tk.Label(self)
         self.training_acc_label["text"] = "訓練辨識率(%)"
-        self.training_acc_label.grid(row=4, column=0, sticky=tk.N+tk.W)
+        self.training_acc_label.grid(row=5, column=0, sticky=tk.N+tk.W)
 
         self.training_acc_text_label = tk.Label(self)
         self.training_acc_text_label["text"] = ""
-        self.training_acc_text_label.grid(row=4, column=1, sticky=tk.N+tk.W)
+        self.training_acc_text_label.grid(row=5, column=1, sticky=tk.N+tk.W)
 
         self.testing_acc_label = tk.Label(self)
         self.testing_acc_label["text"] = "測試辨識率(%)"
-        self.testing_acc_label.grid(row=5, column=0, sticky=tk.N+tk.W)
+        self.testing_acc_label.grid(row=6, column=0, sticky=tk.N+tk.W)
 
         self.testing_acc_text_label = tk.Label(self)
         self.testing_acc_text_label["text"] = ""
-        self.testing_acc_text_label.grid(row=5, column=1, sticky=tk.N+tk.W)
+        self.testing_acc_text_label.grid(row=6, column=1, sticky=tk.N+tk.W)
 
         self.weight_label = tk.Label(self)
         self.weight_label["text"] = "當前鍵結值"
-        self.weight_label.grid(row=6, column=0, sticky=tk.N+tk.W)
+        self.weight_label.grid(row=7, column=0, sticky=tk.N+tk.W)
 
         self.weight_text = tk.Text(self)
-        self.weight_text["height"] = 10
+        self.weight_text["height"] = 5
         self.weight_text["width"] = 40
-        self.weight_text.grid(row=6, column=1, sticky=tk.N+tk.W)
+        self.weight_text.grid(row=7, column=1, sticky=tk.N+tk.W)
 
+        self.bias_label = tk.Label(self)
+        self.bias_label["text"] = "當前偏差(Bias)"
+        self.bias_label.grid(row=8, column=0, sticky=tk.N+tk.W)
 
+        self.bias_text_label = tk.Label(self)
+        self.bias_text_label["text"] = ""
+        self.bias_text_label.grid(row=8, column=1, sticky=tk.N+tk.W)
 
     def draw_training_acc_figure(self, train_result_list):
         #清空影像
@@ -97,19 +111,52 @@ class Application(tk.Frame):
         self.training_acc_canvas.draw()
 
 
-    def draw_training_data_figure(self, dataset):
-        #清空影像
+    def draw_training_data_figure(self, dataset, testing_dataset, last_train_result):
+        # 清空影像
         self.training_data_figure.clf()
         self.training_data_figure.a = self.training_data_figure.add_subplot(111)
-        X = dataset[0].values.reshape(-1,).tolist()
-        y = dataset[1].values.reshape(-1,).tolist()
-        print(dataset)
-        print(X)
-        print(y)
-        #繪製正確率折線圖
-        self.training_data_figure.a.plot(X, y, 'ro')
+
+        # 產生全部資料 X,y list
+        X_0 = dataset[dataset[len(dataset.columns)-1]==0][0].values.reshape(-1,).tolist()
+        y_0 = dataset[dataset[len(dataset.columns)-1]==0][1].values.reshape(-1,).tolist()
+        X_1 = dataset[dataset[len(dataset.columns)-1]==1][0].values.reshape(-1,).tolist()
+        y_1 = dataset[dataset[len(dataset.columns)-1]==1][1].values.reshape(-1,).tolist()
+        
+        # draw 全部資料集兩種分類資料的點位
+        self.training_data_figure.a.plot(X_0, y_0, 'ro')
+        self.training_data_figure.a.plot(X_1, y_1, 'bo')
+
+        # 產生測試資料資料 X,y list
+        X_test = testing_dataset[0].values.reshape(-1,).tolist()
+        y_test = testing_dataset[1].values.reshape(-1,).tolist()
+
+        # draw 測試資料的點位
+        self.training_data_figure.a.plot(X_test, y_test, 'wx')
+
+        # 保存全部資料集的畫布範圍
+        xmin = self.training_data_figure.a.get_xlim()[0]
+        xmax = self.training_data_figure.a.get_xlim()[1]
+        ymin = self.training_data_figure.a.get_ylim()[0]
+        ymax = self.training_data_figure.a.get_ylim()[1]
+
+        # 感知機一次方程式
+        wx = float(last_train_result["weight"][0])
+        wy = float(last_train_result["weight"][1])
+        bias = float(last_train_result["bias"])
+        result_x = np.linspace(-100, 100, 100)  
+        result_y = - (result_x * wx  - bias) / wy         
+
+        # draw 感知機一次方程式(form -100~100)
+        self.training_data_figure.a.plot(result_x, result_y)    
+        
+        # draw 還原全部資料集的畫布範圍
+        self.training_data_figure.a.set_xlim([xmin,xmax])
+        self.training_data_figure.a.set_ylim([ymin,ymax])
+
         self.training_data_figure.a.set_title('Traing Data')
         self.training_data_canvas.draw()
+
+          
 
 
         
@@ -117,8 +164,17 @@ class Application(tk.Frame):
         filename = askopenfilename()
         df = pd.read_table(filename, sep=" ", header=None)
 
-        self.draw_training_data_figure(df)
-
+        # 檢查是否二類問題
+        df_label = np.split(df, [len(df.columns)-1], axis=1)[1]
+        if(len(df_label.groupby(len(df.columns)-1).groups) != 2):
+            print("非二類問題")
+            tk.messagebox.showinfo("非二類問題","非二類問題")
+            return 
+            # 非二類問題
+        # label非0/1組合 改變label-> 0~1
+        if (0 not in df_label.groupby(len(df.columns)-1).groups) or (1 not in df_label.groupby(len(df.columns)-1).groups):
+            df[len(df.columns)-1] = df[len(df.columns)-1] % 2
+       
         # split traning data and testing data
         train_df=df.sample(frac=0.666666)
         test_df=df.drop(train_df.index)
@@ -142,6 +198,7 @@ class Application(tk.Frame):
         train_result_list = []
         print("### training start ###")
         for i in range(int(self.epoch_spinbox.get())):
+            self.training_epoch_text_label["text"] = i + 1
             train_result = n.train()
             train_result_list.append(train_result)
             if train_result["acc"] > int(self.early_stop_spinbox.get()):
@@ -149,14 +206,19 @@ class Application(tk.Frame):
         print("### training end ###")
         self.draw_training_acc_figure(train_result_list)
         self.training_acc_text_label["text"] = train_result_list[len(train_result_list)-1]["acc"]
+        self.bias_text_label["text"] = train_result_list[len(train_result_list)-1]["bias"]
         self.weight_text.delete(1.0, END) 
         self.weight_text.insert(1.0, train_result_list[len(train_result_list)-1]["weight"]) 
+        
         # run testing and show result
         print("### predict start ###")
         test_result = n.test(test_X, test_y)
         print("### predict end ###")
 
         self.testing_acc_text_label["text"] = test_result["acc"]
+
+        # draw training data and predict line
+        self.draw_training_data_figure(df, test_df, train_result_list[len(train_result_list)-1])
 
 
 root = tk.Tk()
