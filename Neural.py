@@ -63,26 +63,39 @@ class Neural():
                 self.bias += self.learning_rate * -1
             print("weight after train: {}, bias after train: {}".format(self.weight, self.bias))
         print("############")
-        print("acc: {}".format(correct_num/self.data_num))
+        print("acc: {}".format(100 * correct_num/self.data_num))
         print("############")
         
         result["weight"] = self.weight
         result["bias"] = self.bias
-        result["acc"] = correct_num/self.data_num
+        result["acc"] = 100 * correct_num/self.data_num
 
         return result
 
-    def predict(self, X, y):
+    def test(self, X, y):
         data_num = len(y)
         correct_num = 0
+        result = {
+            "acc": None,
+            "output_list": []
+        }
         for i in range(data_num):
             print("test: {}: {}".format(i, X[i]))
-            output = self.Y(X[i])
-            print("output: {}  expect: {}".format(output, y[i]))
+            predict = self.Y(X[i])
+            print("output: {}  expect: {}".format(predict, y[i]))
             print("net: {}".format(self.net))
-            if output == y[i]:
+            output = {
+                "input": X[i],
+                "expect": y[i],
+                "predict": predict
+            }
+            result["output_list"].append(output)
+            if predict == y[i]:
                 correct_num += 1
 
         print("############")
-        print("test acc: {}".format(correct_num/data_num))
+        print("test acc: {}".format(100 * correct_num/data_num))
         print("############")
+        result["acc"] = 100 * correct_num/data_num
+
+        return result
