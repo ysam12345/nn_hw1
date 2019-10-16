@@ -20,6 +20,8 @@ class Application(tk.Frame):
     
     def create_widgets(self):
 
+        self.winfo_toplevel().title("Yochien NN HW1")
+
         # 設定訓練循環次數
         self.learning_rate_label = tk.Label(self)
         self.learning_rate_label["text"] = "學習率"
@@ -45,76 +47,93 @@ class Application(tk.Frame):
         self.early_stop_spinbox = tk.Spinbox(self, from_=1, to=100)
         self.early_stop_spinbox.grid(row=2, column=1, sticky=tk.N+tk.W)
 
-        self.label = tk.Label(self)
-        self.label["text"] = "載入資料集並進行訓練及測試"
-        self.label.grid(row=3, column=0, sticky=tk.N+tk.W)
+        # 選取資料集檔案
+        self.load_data_label = tk.Label(self)
+        self.load_data_label["text"] = "載入資料集"
+        self.load_data_label.grid(row=3, column=0, sticky=tk.N+tk.W)
 
-        # 選取資料集檔案並run
         self.load_data_button = tk.Button(self)
         self.load_data_button["text"] = "選取檔案"
         self.load_data_button.grid(row=3, column=1, sticky=tk.N+tk.W)
-        self.load_data_button["command"] = self.select_file_and_run
+        self.load_data_button["command"] = self.select_file
+
+        self.file_path_label = tk.Label(self)
+        self.file_path_label["text"] = ""
+        self.file_path_label.grid(row=3, column=2, sticky=tk.N+tk.W)
+
+        # run run
+        self.run_label = tk.Label(self)
+        self.run_label["text"] = "進行訓練及測試"
+        self.run_label.grid(row=4, column=0, sticky=tk.N+tk.W)
+
+        self.run_button = tk.Button(self)
+        self.run_button["text"] = "Run"
+        self.run_button.grid(row=4, column=1, sticky=tk.N+tk.W)
+        self.run_button["command"] = self.run
 
 
         # 設定訓練圖表
-        self.training_acc_figure = Figure(figsize=(3,3), dpi=100)
+        self.training_acc_figure = Figure(figsize=(4,4), dpi=100)
         self.training_acc_canvas = FigureCanvasTkAgg(self.training_acc_figure, self)
         self.training_acc_canvas.draw()
-        self.training_acc_canvas.get_tk_widget().grid(row=4, column=0, columnspan=3)
+        self.training_acc_canvas.get_tk_widget().grid(row=5, column=0, columnspan=3)
 
-        self.training_data_figure = Figure(figsize=(3,3), dpi=100)
+        self.training_data_figure = Figure(figsize=(4,4), dpi=100)
         self.training_data_canvas = FigureCanvasTkAgg(self.training_data_figure, self)
         self.training_data_canvas.draw()
-        self.training_data_canvas.get_tk_widget().grid(row=4, column=4, columnspan=3)
+        self.training_data_canvas.get_tk_widget().grid(row=5, column=4, columnspan=3)
 
         # 相關結果文字
         self.training_epoch_label = tk.Label(self)
         self.training_epoch_label["text"] = "實際訓練次數(Epoch)"
-        self.training_epoch_label.grid(row=5, column=0, sticky=tk.N+tk.W)
+        self.training_epoch_label.grid(row=6, column=0, sticky=tk.N+tk.W)
 
         self.training_epoch_text_label = tk.Label(self)
         self.training_epoch_text_label["text"] = ""
-        self.training_epoch_text_label.grid(row=5, column=1, sticky=tk.N+tk.W)
+        self.training_epoch_text_label.grid(row=6, column=1, sticky=tk.N+tk.W)
 
         self.training_acc_label = tk.Label(self)
         self.training_acc_label["text"] = "訓練辨識率(%)"
-        self.training_acc_label.grid(row=6, column=0, sticky=tk.N+tk.W)
+        self.training_acc_label.grid(row=7, column=0, sticky=tk.N+tk.W)
 
         self.training_acc_text_label = tk.Label(self)
         self.training_acc_text_label["text"] = ""
-        self.training_acc_text_label.grid(row=6, column=1, sticky=tk.N+tk.W)
+        self.training_acc_text_label.grid(row=7, column=1, sticky=tk.N+tk.W)
 
         self.testing_acc_label = tk.Label(self)
         self.testing_acc_label["text"] = "測試辨識率(%)"
-        self.testing_acc_label.grid(row=7, column=0, sticky=tk.N+tk.W)
+        self.testing_acc_label.grid(row=8, column=0, sticky=tk.N+tk.W)
 
         self.testing_acc_text_label = tk.Label(self)
         self.testing_acc_text_label["text"] = ""
-        self.testing_acc_text_label.grid(row=7, column=1, sticky=tk.N+tk.W)
+        self.testing_acc_text_label.grid(row=8, column=1, sticky=tk.N+tk.W)
 
         self.weight_label = tk.Label(self)
         self.weight_label["text"] = "當前鍵結值"
-        self.weight_label.grid(row=8, column=0, sticky=tk.N+tk.W)
+        self.weight_label.grid(row=9, column=0, sticky=tk.N+tk.W)
 
         self.weight_text = tk.Text(self)
         self.weight_text["height"] = 5
         self.weight_text["width"] = 40
-        self.weight_text.grid(row=8, column=1, sticky=tk.N+tk.W)
+        self.weight_text.grid(row=9, column=1, sticky=tk.N+tk.W)
 
         self.bias_label = tk.Label(self)
         self.bias_label["text"] = "當前偏差(Bias)"
-        self.bias_label.grid(row=9, column=0, sticky=tk.N+tk.W)
+        self.bias_label.grid(row=10, column=0, sticky=tk.N+tk.W)
 
         self.bias_text_label = tk.Label(self)
         self.bias_text_label["text"] = ""
-        self.bias_text_label.grid(row=9, column=1, sticky=tk.N+tk.W)
+        self.bias_text_label.grid(row=10, column=1, sticky=tk.N+tk.W)
 
     def draw_training_acc_figure(self, train_result_list):
         #清空影像
         self.training_acc_figure.clf()
         self.training_acc_figure.a = self.training_acc_figure.add_subplot(111)
         acc_list = [i['acc'] for i in train_result_list]
-    
+
+        #使y範圍為0-105
+        self.training_acc_figure.a.set_ylim([0, 105])
+
         #繪製正確率折線圖
         self.training_acc_figure.a.plot(acc_list)
         self.training_acc_figure.a.set_title('Traing: Acc/Epoch')
@@ -165,20 +184,29 @@ class Application(tk.Frame):
 
         self.training_data_figure.a.set_title('Traing Data')
         self.training_data_canvas.draw()
-
           
 
-
+    def select_file(self):
+        try:
+            filename = askopenfilename()
+            self.file_path_label["text"] = filename
+        except Exception as e:
+            print(e)
+            self.file_path_label["text"] = ""
         
-    def select_file_and_run(self):
-        filename = askopenfilename()
+    def run(self):
+        filename = self.file_path_label["text"]
+        if(filename == ""):
+            print("未選取檔案")
+            tk.messagebox.showinfo("Error","未選取資料集")
+            return
         df = pd.read_table(filename, sep=" ", header=None)
 
         # 檢查是否二類問題
         df_label = np.split(df, [len(df.columns)-1], axis=1)[1]
         if(len(df_label.groupby(len(df.columns)-1).groups) != 2):
             print("非二類問題")
-            tk.messagebox.showinfo("非二類問題","非二類問題")
+            tk.messagebox.showinfo("Error","資料集非二類問題")
             return 
             # 非二類問題
         # label非0/1組合 改變label-> 0~1
@@ -212,7 +240,7 @@ class Application(tk.Frame):
             self.training_epoch_text_label["text"] = i + 1
             train_result = n.train()
             train_result_list.append(train_result)
-            if train_result["acc"] > int(self.early_stop_spinbox.get()):
+            if train_result["acc"] > float(self.early_stop_spinbox.get()):
                 break
         print("### training end ###")
         self.draw_training_acc_figure(train_result_list)
